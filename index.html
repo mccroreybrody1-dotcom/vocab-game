@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Field Goal Vocab Game</title>
+  <title>Retro Bowl Style Field Goal Game</title>
   <style>
     body {
       font-family: Arial;
@@ -35,7 +35,7 @@
       overflow: hidden;
     }
 
-    /* GOALPOST (CSS ONLY) */
+    /* GOALPOST */
     #goalpost {
       position: absolute;
       bottom: 60px;
@@ -47,7 +47,7 @@
       border-top: 8px solid yellow;
     }
 
-    /* FOOTBALL (CSS ONLY) */
+    /* FOOTBALL */
     #football {
       position: absolute;
       bottom: 10px;
@@ -60,14 +60,30 @@
       border: 2px solid #552200;
     }
 
-    .slider-box {
-      margin: 10px;
+    /* TIMING BAR */
+    #timingBarContainer {
+      width: 300px;
+      height: 20px;
+      background: #ddd;
+      margin: auto;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid #444;
+      display: none;
+    }
+
+    #timingBar {
+      width: 60px;
+      height: 20px;
+      background: red;
+      position: relative;
+      left: 0;
     }
 
     button {
-      padding: 8px 16px;
-      margin: 5px;
+      padding: 10px 20px;
       cursor: pointer;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -75,7 +91,7 @@
 <body>
 
 <div id="game-box">
-  <h1>🏈 Field Goal Vocab Game</h1>
+  <h1>🏈 Retro Bowl Style Field Goal Game</h1>
   <div id="score">Score: 0</div>
 
   <div id="question-box">
@@ -86,23 +102,11 @@
 
   <p id="message"></p>
 
-  <div id="kick-controls">
-    <h3>Aim Your Kick</h3>
-
-    <div class="slider-box">
-      Angle: <span id="angleDisplay">45</span>°
-      <input type="range" id="angleSlider" min="20" max="70" value="45"
-        oninput="angleDisplay.innerText=this.value">
-    </div>
-
-    <div class="slider-box">
-      Power: <span id="powerDisplay">50</span>%
-      <input type="range" id="powerSlider" min="30" max="100" value="50"
-        oninput="powerDisplay.innerText=this.value">
-    </div>
-
-    <button onclick="kick()">Kick!</button>
+  <div id="timingBarContainer">
+    <div id="timingBar"></div>
   </div>
+
+  <button id="kickButton" style="display:none;" onclick="stopBar()">STOP BAR</button>
 
   <div id="kick-area">
     <div id="goalpost"></div>
@@ -131,6 +135,10 @@
   let current = 0;
   let score = 0;
 
+  let barInterval;
+  let barPos = 0;
+  let barDirection = 1;
+
   function updateScore() {
     document.getElementById("score").innerText = "Score: " + score;
   }
@@ -155,35 +163,62 @@
     if (index === q.correct) {
       score += 5;
       updateScore();
-      document.getElementById("message").innerText = "Correct! Kick now!";
+      document.getElementById("message").innerText = "Correct! Time your kick!";
     } else {
-      document.getElementById("message").innerText = "Incorrect! Kick anyway!";
+      document.getElementById("message").innerText = "Incorrect! You still get to kick!";
     }
+
+    startTimingBar();
   }
 
-  function kick() {
+  function startTimingBar() {
+    document.getElementById("timingBarContainer").style.display = "block";
+    document.getElementById("kickButton").style.display = "inline-block";
+
+    barPos = 0;
+    barDirection = 1;
+
+    barInterval = setInterval(() => {
+      barPos += barDirection * 5;
+
+      if (barPos >= 240) barDirection = -1;
+      if (barPos <= 0) barDirection = 1;
+
+      document.getElementById("timingBar").style.left = barPos + "px";
+    }, 20);
+  }
+
+  function stopBar() {
+    clearInterval(barInterval);
+
+    let accuracy = Math.abs(barPos - 120); // center is best
+
+    let curve = accuracy / 40; // bigger = more curve
+
+    kickFootball(curve);
+  }
+
+  function kickFootball(curve) {
     const football = document.getElementById("football");
     football.style.display = "block";
-
-    let angle = Number(document.getElementById("angleSlider").value);
-    let power = Number(document.getElementById("powerSlider").value);
-
-    let rad = angle * (Math.PI / 180);
-    let vx = power * Math.cos(rad) * 0.4;
-    let vy = power * Math.sin(rad) * 0.4;
 
     let x = 20;
     let y = 10;
 
+    let vx = 5;
+    let vy = 5;
+
     const interval = setInterval(() => {
       x += vx;
       y += vy;
-      vy -= 0.3;
+      vy -= 0.2;
+
+      // curve the ball based on timing
+      x += curve;
 
       football.style.left = x + "px";
       football.style.bottom = y + "px";
 
-      // Goal detection
       if (x > 260 && x < 340 && y > 140) {
         clearInterval(interval);
         document.getElementById("message").innerText = "🏈 Field Goal GOOD!";
@@ -192,7 +227,6 @@
         resetKick();
       }
 
-      // Miss
       if (y < 0 || x > 600) {
         clearInterval(interval);
         document.getElementById("message").innerText = "❌ Missed!";
@@ -203,6 +237,9 @@
 
   function resetKick() {
     document.getElementById("football").style.display = "none";
+    document.getElementById("timingBarContainer").style.display = "none";
+    document.getElementById("kickButton").style.display = "none";
+
     nextQuestion();
   }
 
