@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Field Goal Vocab Game</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #e8f3ff;
+    }
+
+    #game-box {
+      background: white;
+      padding: 20px;
+      margin: 40px auto;
+      width: 700px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #aaa;
+    }
+
+    #score {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    /* FIELD */
+    #kick-area {
+      position: relative;
+      width: 600px;
+      height: 300px;
+      margin: 20px auto;
+      background: linear-gradient(#3b8b3b, #2f6e2f);
+      border: 2px solid #333;
+      overflow: hidden;
+    }
+
+    /* GOALPOST (CSS ONLY) */
+    #goalpost {
+      position: absolute;
+      bottom: 60px;
+      left: 260px;
+      width: 80px;
+      height: 140px;
+      border-left: 8px solid yellow;
+      border-right: 8px solid yellow;
+      border-top: 8px solid yellow;
+    }
+
+    /* FOOTBALL (CSS ONLY) */
+    #football {
+      position: absolute;
+      bottom: 10px;
+      left: 20px;
+      width: 35px;
+      height: 20px;
+      background: brown;
+      border-radius: 50%;
+      display: none;
+      border: 2px solid #552200;
+    }
+
+    .slider-box {
+      margin: 10px;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="game-box">
+  <h1>🏈 Field Goal Vocab Game</h1>
+  <div id="score">Score: 0</div>
+
+  <div id="question-box">
+    <h2 id="question"></h2>
+  </div>
+
+  <div id="answers"></div>
+
+  <p id="message"></p>
+
+  <div id="kick-controls">
+    <h3>Aim Your Kick</h3>
+
+    <div class="slider-box">
+      Angle: <span id="angleDisplay">45</span>°
+      <input type="range" id="angleSlider" min="20" max="70" value="45"
+        oninput="angleDisplay.innerText=this.value">
+    </div>
+
+    <div class="slider-box">
+      Power: <span id="powerDisplay">50</span>%
+      <input type="range" id="powerSlider" min="30" max="100" value="50"
+        oninput="powerDisplay.innerText=this.value">
+    </div>
+
+    <button onclick="kick()">Kick!</button>
+  </div>
+
+  <div id="kick-area">
+    <div id="goalpost"></div>
+    <div id="football"></div>
+  </div>
+</div>
+
+<script>
+  const questions = [
+    { q: "Energy due to motion is called:", a: ["Potential Energy", "Kinetic Energy", "Thermal Energy"], correct: 1 },
+    { q: "A moving car, bouncing ball, or running child are examples of:", a: ["Kinetic Energy", "Temperature", "Pressure"], correct: 0 },
+    { q: "The measure of the average kinetic energy of particles is:", a: ["Heat", "Temperature", "Thermal Expansion"], correct: 1 },
+    { q: "Stored energy due to interactions between objects or particles is:", a: ["Potential Energy", "Thermal Energy", "Chemical Formula"], correct: 0 },
+    { q: "Hot water steaming and heated metal glowing red-hot are examples of:", a: ["Thermal Energy", "Kinetic Energy", "Atoms"], correct: 0 },
+    { q: "A small particle that is the building block of matter is an:", a: ["Element", "Atom", "Molecule"], correct: 1 },
+    { q: "Matter with a composition that is always the same is a:", a: ["Compound", "Substance", "Element"], correct: 1 },
+    { q: "A substance that consists of only one type of atom is an:", a: ["Element", "Compound", "Molecule"], correct: 0 },
+    { q: "A substance containing atoms of two or more elements chemically bonded is a:", a: ["Element", "Compound", "Atom"], correct: 1 },
+    { q: "H₂O, CO₂, and NaCl are examples of:", a: ["Chemical Formulas", "Elements", "Pressure"], correct: 0 },
+    { q: "A decrease in a material's volume when temperature decreases is:", a: ["Thermal Expansion", "Thermal Contraction", "Heat"], correct: 1 },
+    { q: "An increase in a material's volume when temperature increases is:", a: ["Thermal Expansion", "Pressure", "Vaporization"], correct: 0 },
+    { q: "The transfer of thermal energy from warmer to cooler areas is:", a: ["Heat", "Temperature", "Kinetic Energy"], correct: 0 },
+    { q: "Two or more atoms held together by covalent bonds form a:", a: ["Atom", "Element", "Molecule"], correct: 2 }
+  ];
+
+  let current = 0;
+  let score = 0;
+
+  function updateScore() {
+    document.getElementById("score").innerText = "Score: " + score;
+  }
+
+  function loadQuestion() {
+    const q = questions[current];
+    document.getElementById("question").innerText = q.q;
+
+    const answersDiv = document.getElementById("answers");
+    answersDiv.innerHTML = "";
+
+    q.a.forEach((ans, index) => {
+      const btn = document.createElement("button");
+      btn.innerText = ans;
+      btn.onclick = () => checkAnswer(index);
+      answersDiv.appendChild(btn);
+    });
+  }
+
+  function checkAnswer(index) {
+    const q = questions[current];
+    if (index === q.correct) {
+      score += 5;
+      updateScore();
+      document.getElementById("message").innerText = "Correct! Kick now!";
+    } else {
+      document.getElementById("message").innerText = "Incorrect! Kick anyway!";
+    }
+  }
+
+  function kick() {
+    const football = document.getElementById("football");
+    football.style.display = "block";
+
+    let angle = Number(document.getElementById("angleSlider").value);
+    let power = Number(document.getElementById("powerSlider").value);
+
+    let rad = angle * (Math.PI / 180);
+    let vx = power * Math.cos(rad) * 0.4;
+    let vy = power * Math.sin(rad) * 0.4;
+
+    let x = 20;
+    let y = 10;
+
+    const interval = setInterval(() => {
+      x += vx;
+      y += vy;
+      vy -= 0.3;
+
+      football.style.left = x + "px";
+      football.style.bottom = y + "px";
+
+      // Goal detection
+      if (x > 260 && x < 340 && y > 140) {
+        clearInterval(interval);
+        document.getElementById("message").innerText = "🏈 Field Goal GOOD!";
+        score += 3;
+        updateScore();
+        resetKick();
+      }
+
+      // Miss
+      if (y < 0 || x > 600) {
+        clearInterval(interval);
+        document.getElementById("message").innerText = "❌ Missed!";
+        resetKick();
+      }
+    }, 30);
+  }
+
+  function resetKick() {
+    document.getElementById("football").style.display = "none";
+    nextQuestion();
+  }
+
+  function nextQuestion() {
+    current++;
+    if (current >= questions.length) {
+      document.getElementById("question-box").innerHTML =
+        "<h2>Game Over!</h2><h3>Your Final Score: " + score + "</h3>";
+      document.getElementById("answers").innerHTML = "";
+      return;
+    }
+    loadQuestion();
+  }
+
+  loadQuestion();
+  updateScore();
+</script>
+
+</body>
+</html>
